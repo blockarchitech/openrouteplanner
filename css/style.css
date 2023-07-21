@@ -1,0 +1,68 @@
+html,
+body {
+	height: 100%;
+	overflow: hidden;
+	width: 100%;
+}
+
+#container {
+	height: calc(100% - 56px);
+	overflow: hidden;
+	width: 100%;
+}
+
+
+.navbar {
+	margin-bottom: 0;
+	margin: 0;
+	min-height: 50px;
+	z-index: 10000;
+	/* make sure the navbar is on top of everything else in the page */
+	position: sticky;
+	top: 0;
+
+}
+
+
+#map {
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+	height: 100%;
+	width: auto;
+	z-index: 1;
+
+}
+
+
+@media (max-width: 767px) {
+	#sidebar {
+		display: none;
+	}
+}
+
+#dropzone {
+	height: 100%;
+	width: 100%;
+	/* Zero overflow so the map doesn't get cut off */
+	overflow: hidden;
+	background-color: rgba(0, 0, 0, 0.5);
+	/* dead center */
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	/* make sure the dropzone is on top of everything else */
+	z-index: 1000;
+	/* make sure the dropzone is clickable */
+	pointer-events: none;
+
+}
+
+#dropzone p {
+	color: #ccc;
+	font-size: 5rem;
+	text-align: center;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+}

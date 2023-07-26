@@ -1,0 +1,55 @@
+<div
+  class="modal fade graphhopperApiKeyModal"
+  id="graphhopperApiKeyModal"
+  tabindex="-1"
+  role="dialog"
+  aria-labelledby="graphhopperApiKeyModalLabel"
+  aria-hidden="true"
+  data-backdrop="static"
+  data-keyboard="false"
+>
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="exampleModalLabel">Course Creator</h1>
+      </div>
+      <div class="modal-body">
+        <div
+          id="graphhopper_api_key_error"
+          class="alert alert-danger"
+          role="alert"
+          hidden="true"
+        >
+          <h4 class="alert-heading">Error</h4>
+          <p class="mb-0">Please enter a valid GraphHopper API key.</p>
+        </div>
+        <h1>GraphHopper API Key Required</h1>
+        <p>
+          Please input your GraphHopper API key. If you do not have one, you can
+          get one for free
+          <a href="https://graphhopper.com/dashboard/#/apikeys">here</a>.
+          <em>We will never see your API key.</em>
+        </p>
+        <p>
+          The API key is required to use the course creator. If you do not have
+          one, you can still view your GPX files on the map.
+        </p>
+        <input
+          type="text"
+          id="graphhopper_api_key"
+          class="form-control"
+          placeholder="i_am_an_api_key"
+        />
+      </div>
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-primary"
+          id="save_graphhopper_api_key"
+        >
+          Save
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

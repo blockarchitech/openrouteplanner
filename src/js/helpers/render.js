@@ -1,72 +1,10 @@
-// Map setup
-var map = L.map("map").setView([51.505, -0.09], 13);
-map.addLayer(
-  new L.TileLayer("http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution:
-      "Map data © <a href='http://openstreetmap.org'>OpenStreetMap</a> contributors | Special thanks to Turf.js, Leaflet, and Overpass API"
-  })
-);
-
-L.control.scale().addTo(map);
-
-// Course selected setup
-var selected_info_text = document.getElementById("loaded_course");
-function update_selected_info(text) {
-  if (selected_info_text.innerHTML == "") {
-    selected_info_text.innerHTML = `<a class="nav-link disabled">No course selected</a>`;
-  } else {
-    selected_info_text.innerHTML = `<a class="nav-link" href="#">${text}</a>`;
-  }
-}
-
-// Dropzone setup
-var dropzone = document.getElementById("dropzone");
-dropzone.hidden = true;
-
-document.addEventListener(
-  "dragover",
-  function (e) {
-    e.preventDefault();
-    dropzone.hidden = false;
-    return false;
-  },
-  false
-);
-
-document.addEventListener(
-  "dragleave",
-  function (e) {
-    e.preventDefault();
-    dropzone.hidden = true;
-    return false;
-  },
-  false
-);
-
-// Helpers
-var queryOverpass = (function () {
-  var baseUrl = "http://overpass-api.de/api/interpreter";
-  var query = function (query) {
-    var url = baseUrl + "?data=" + encodeURIComponent(query);
-    return fetch(url).then(function (response) {
-      if (!response.ok) {
-        throw new Error(
-          "HTTP error " + response.status + " " + response.statusText
-        );
-      }
-      return response.json();
-    });
-  };
-  return query;
-})();
-
-function convertFITtoGPX(fitFile) {
-  var gpxData = toGeoJSON.gpx(fitFile);
-  return gpxData;
-}
-
 // Render
-function render(event) {
+
+import * as toGeoJSON from "@tmcw/togeojson";
+import * as turf from "@turf/turf";
+import { default as queryOverpass } from "./queryOverpass";
+
+export default function render(event, map, update_selected_info) {
   var gpx = event.target.result;
   var parser = new DOMParser();
   var xmlDoc = parser.parseFromString(gpx, "text/xml");
@@ -108,6 +46,7 @@ function render(event) {
 	`;
     queryOverpass(query).then(function (data) {
       // loop through all the ways returned and find the first one with a name
+      //   alert(data);
       for (var i = 0; i < data.elements.length; i++) {
         if (data.elements[i].tags.name != undefined) {
           gpxData.features[0].properties.name = data.elements[i].tags.name;
@@ -200,50 +139,3 @@ function render(event) {
   // focus the map on the gpx data
   map.fitBounds(L.geoJSON(gpxData).getBounds());
 }
-
-// Handle file drop
-
-document.addEventListener(
-  "drop",
-  function (e) {
-    e.preventDefault();
-    dropzone.hidden = true;
-    var file = e.dataTransfer.files[0];
-    if (file.name.split(".").pop() != "gpx") {
-      alert(
-        "Please upload a GPX file! \n\nIf you're uploading a different type, please convert them to .GPX first: https://www.alltrails.com/converter"
-      );
-      return false;
-    }
-
-    var reader = new FileReader();
-    reader.onload = function (event) {
-      render(event);
-    };
-    reader.readAsText(file);
-    return false;
-  },
-  false
-);
-
-// Handle file selection
-
-document.getElementById("file-input").addEventListener(
-  "change",
-  function (e) {
-    var file = e.target.files[0];
-    if (file.name.split(".").pop() != "gpx") {
-      alert(
-        "Please upload a GPX file! \n\nIf you're uploading .FIT files, please convert them to .GPX first: https://www.alltrails.com/converter"
-      );
-      return false;
-    }
-    var reader = new FileReader();
-    reader.onload = function (event) {
-      render(event);
-    };
-    reader.readAsText(file);
-    return false;
-  },
-  false
-);

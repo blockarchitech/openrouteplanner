@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>OpenRoutePlanner</title>
+  </head>
+  <!-- Google tag (gtag.js) -->
+  <script
+    async
+    src="https://www.googletagmanager.com/gtag/js?id=G-CYRZGDM9C8"
+  ></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+    gtag("js", new Date());
+
+    gtag("config", "G-CYRZGDM9C8");
+  </script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+
+  <body>
+    <!-- define include function -->
+    <%- include partials/header.ejs %>
+    <div id="container">
+      <%- include partials/welcomeModal.ejs %> <%- include
+      partials/graphHopperAPIModal %>
+
+      <div id="alerts"></div>
+      <div id="map"></div>
+    </div>
+    <div id="dropzone" class="dropzone" aria-hidden="true">
+      <p>Drop your GPX file here.</p>
+    </div>
+  </body>
+</html>

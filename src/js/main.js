@@ -1,5 +1,5 @@
 //
-// GPX Viewer
+// OpenRoutePlanner
 //
 
 if (
@@ -14,19 +14,6 @@ const userTime = new Date();
 if (userTime.getHours() >= 18 || userTime.getHours() <= 6) {
   document.documentElement.setAttribute("data-bs-theme", "dark");
 }
-
-// gibbie
-// are you here
-// ok well
-// we could tryy and make it so that the map loads before you reach the unloaded parts
-// that might be difficult
-// but it would provide seamless scrolling
-
-// atleast it's dark
-// yay :)
-// oh we should add an automatic time theme changer
-// not the best looking but it'll get by
-// won't singe your eyes at night
 
 // Jquery
 import $ from "jquery";
@@ -56,6 +43,9 @@ require("./helpers/convertCords");
 import { default as render } from "./helpers/render";
 import { default as createButton } from "./helpers/createButton";
 import queryOverpass from "./helpers/queryOverpass";
+
+// Turf
+import * as turf from "@turf/turf";
 
 // URL Params
 const queryString = window.location.search;
@@ -199,9 +189,6 @@ document.getElementById("file-input").addEventListener(
   false
 );
 
-// Handle new document button
-// (URL param: ?new=true)
-
 if (urlParams.get("new") == "true") {
   // Check localsotrage for GraphHopper API key
   if (
@@ -211,13 +198,15 @@ if (urlParams.get("new") == "true") {
     askForGraphHopperKey();
   }
 
-  // New document (do not upload a file)
+  if (localStorage.getItem("debug") == true) {
+    map.setView([38.5816, -121.4944], 13);
+  } else {
+    map.locate({ setView: true, maxZoom: 16 });
+  }
+  //
+  // a
+  //
 
-  // Ask for user location and focus map on it
-  //   map.locate({ setView: true, maxZoom: 16 });
-  // temp center on sacramento
-  map.setView([38.5816, -121.4944], 13);
-  // Ask user to click on the map to start drawing (create a new router with leaflet routing machine)
   var router = new L.Routing.control({
     waypoints: [],
     routeWhileDragging: true,
@@ -260,7 +249,6 @@ if (urlParams.get("new") == "true") {
       router.spliceWaypoints(router.getWaypoints().length, 0, e.latlng);
       map.closePopup();
     });
-
     L.popup().setContent(container).setLatLng(e.latlng).openOn(map);
   });
 
@@ -307,4 +295,139 @@ if (urlParams.get("new") == "true") {
       saveRoute();
     }
   });
+
+  document
+    .getElementById("search-button")
+    .addEventListener("click", function () {
+      var searchResults = document.getElementById("search-results");
+
+      // show spinner
+      document.getElementById(
+        "search-button"
+      ).innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Searching...`;
+      document.getElementById("search-button").disabled = true;
+      var waitingTemplate = `
+		          <div
+            class="list-group-item list-group-item-action"
+            aria-current="true"
+          >
+            <div class="d-flex w-100 justify-content-between">
+              <h5 class="mb-1"><span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Searching... </h5>
+            </div>
+          </div>
+		  `;
+      searchResults.innerHTML = waitingTemplate;
+      // get the search query, and put results in the search results div
+      var makeResult = (name, lat, lng) => {
+        // calculate distance from current location
+        var distance = turf.distance(
+          turf.point([lat, lng]),
+          turf.point([map.getCenter().lat, map.getCenter().lng]),
+          { units: "miles" }
+        );
+
+        var template = `
+		          <div
+            class="list-group-item list-group-item-action"
+            aria-current="true"
+          >
+            <div class="d-flex w-100 justify-content-between">
+              <h5 class="mb-1">${name}</h5>
+            </div>
+            <p class="mb-1">About ${Math.round(distance)} miles from you.</p>
+            <small>Lat: ${lat} Long: ${lng}</small>
+			<meta itemprop="latitude" content="${lat}">
+			<meta itemprop="longitude" content="${lng}">
+          </div>
+		  `;
+        return template;
+      };
+      var searchQuery = document.getElementById("search-input").value;
+      searchResults.innerHTML = "";
+      // search for the location
+      fetch(
+        `https://nominatim.openstreetmap.org/search?q=${searchQuery}&format=json&limit=5`
+      )
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          // loop through the results and add them to the search results div. Sort by distance from current location
+          data.sort(function (a, b) {
+            var a_distance = turf.distance(
+              turf.point([a.lat, a.lon]),
+              turf.point([map.getCenter().lat, map.getCenter().lng]),
+              { units: "miles" }
+            );
+            var b_distance = turf.distance(
+              turf.point([b.lat, b.lon]),
+              turf.point([map.getCenter().lat, map.getCenter().lng]),
+              { units: "miles" }
+            );
+            return a_distance - b_distance;
+          });
+          for (var i = 0; i < data.length; i++) {
+            searchResults.innerHTML += makeResult(
+              data[i].display_name,
+              data[i].lat,
+              data[i].lon
+            );
+          }
+          // zoom out to show all results, and fit bounds
+          // add markers to each result
+          var markers = [];
+          for (var i = 0; i < data.length; i++) {
+            markers.push(L.marker([data[i].lat, data[i].lon]));
+          }
+          var group = new L.featureGroup(markers);
+          map.fitBounds(group.getBounds());
+
+          markers.forEach(function (marker) {
+            marker.addTo(map);
+          });
+
+          // add event listener to each result to add a waypoint
+          var results = document.getElementsByClassName(
+            "list-group-item-action"
+          );
+          // focus the map on clicked result
+          for (var i = 0; i < results.length; i++) {
+            results[i].addEventListener("click", function () {
+              var lat = this.getElementsByTagName("meta")[0].content;
+              var lng = this.getElementsByTagName("meta")[1].content;
+              map.setView([lat, lng], 17);
+              $("#searchModal").modal("hide");
+              // remove markers
+              markers.forEach(function (marker) {
+                marker.remove();
+              });
+            });
+          }
+        })
+        .catch(function (error) {
+          console.log(error);
+        })
+        .finally(function () {
+          // hide spinner
+          document.getElementById("search-button").innerHTML = `Search`;
+          document.getElementById("search-button").disabled = false;
+        });
+    });
 }
+
+// if a with id erase is clicked, erase the route
+document.getElementById("erase").addEventListener("click", function () {
+  router.spliceWaypoints(0, router.getWaypoints().length);
+  update_selected_info("");
+});
+
+// if gobutton is clicked, show searchModal
+document.getElementById("gobutton").addEventListener("click", function () {
+  $("#searchModal").modal("show");
+});
+
+// Search modal setup
+var searchModal = document.getElementById("searchModal");
+searchModal.addEventListener("shown.bs.modal", function () {
+  document.getElementById("search-input").focus();
+});

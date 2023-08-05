@@ -1,0 +1,45 @@
+<div
+  class="modal fade searchModal"
+  id="searchModal"
+  tabindex="-1"
+  role="dialog"
+  aria-labelledby="searchModalLabel"
+  aria-hidden="true"
+  data-backdrop="static"
+  data-keyboard="false"
+>
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="exampleModalLabel">Go</h1>
+      </div>
+      <div class="modal-body">
+        <h1>Go</h1>
+        <p>Where to?</p>
+        <!-- bootstrap input group with search results at bottom and button -->
+        <div class="input-group mb-3">
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Search for a location"
+            aria-label="Search for a location"
+            aria-describedby="search-button"
+            id="search-input"
+          />
+          <button
+            class="btn btn-outline-secondary"
+            type="button"
+            id="search-button"
+          >
+            Search
+          </button>
+        </div>
+
+        <!-- bootstrap list group for search results -->
+        <div class="list-group" id="search-results">
+          <!-- temp start searching -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
